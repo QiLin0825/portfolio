@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['content', 'createdAt', 'authorId']) &&
+             data.content is string && data.content.size() > 0 && data.content.size() < 1000 &&
+             data.createdAt is timestamp &&
+             data.authorId == request.auth.uid &&
+             (!('authorName' in data) || (data.authorName is string && data.authorName.size() < 50));
+    }
+
+    match /messages/{messageId} {
+      // Anyone can create a message if authenticated (anonymous counts)
+      allow create: if isAuthenticated() && isValidMessage(request.resource.data);
+      // Only author or admin can read
+      allow read: if isAuthenticated() && (resource.data.authorId == request.auth.uid || isAdmin());
+      // Only admin can delete
+      allow delete: if isAdmin();
+      allow update: if false;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "loffierdebelakwq8323@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAdmin();
+    }
+  }
+}

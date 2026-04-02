@@ -1,0 +1,35 @@
+{
+  "entities": {
+    "message": {
+      "title": "Anonymous Message",
+      "description": "A message left by an anonymous user.",
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "string",
+          "description": "The content of the message."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The time the message was created."
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Optional name provided by the user."
+        },
+        "authorId": {
+          "type": "string",
+          "description": "The UID of the user who wrote the message."
+        }
+      },
+      "required": ["content", "createdAt", "authorId"]
+    }
+  },
+  "firestore": {
+    "/messages/{messageId}": {
+      "schema": "message",
+      "description": "Collection of anonymous messages."
+    }
+  }
+}
